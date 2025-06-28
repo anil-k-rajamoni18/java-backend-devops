@@ -1,6 +1,0 @@
-apiVersion: v2
-name: mysqldb-service
-description: MySQL database for Car Rental app
-type: application
-version: 0.1.0
-appVersion: "8.0"   # Assuming MySQL 8, update if needed
