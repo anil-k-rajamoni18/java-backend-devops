@@ -2,60 +2,44 @@ import java.util.*;
 
 public class Example  {
   public static void main(String[] args) {
-        // Constructor 1: Default capacity
-        ArrayList<String> list1 = new ArrayList<>();
 
-        // Using add() to insert elements
-        list1.add("Apple");
-        list1.add("Banana");
-        list1.add("Cherry");
+  // Creating a HashSet
+        HashSet<String> fruits = new HashSet<>();
 
-        // Constructor 2: With initial capacity
-        ArrayList<String> list2 = new ArrayList<>(5);
-        list2.add("Date");
-        list2.add("Elderberry");
+        // Adding elements
+        fruits.add("Apple");
+        fruits.add("Banana");
+        fruits.add("Cherry");
+        fruits.add(null);
+        fruits.add(null);
+        fruits.add("Apple"); // Duplicate, won't be added
 
-        // Constructor 3: Using another collection
-        ArrayList<String> list3 = new ArrayList<>(list1); // Cloning list1
+        System.out.println(fruits);
 
-        // Using add(index, element)
-        list3.add(1, "Blueberry");
+        // Checking size and contents
+        System.out.println("Set size: " + fruits.size());
+        System.out.println("Contains Banana? " + fruits.contains("Banana"));
 
-        // Using get() and set()
-        System.out.println("Element at index 2: " + list3.get(2));
-        list3.set(2, "Coconut");
+        // Removing element
+        fruits.remove("Banana");
 
-        // Remove elements
-        list3.remove("Banana"); // by value
-        list3.remove(0);        // by index
-
-        // Using contains(), size(), isEmpty()
-        System.out.println("Contains 'Apple'? " + list3.contains("Apple"));
-        System.out.println("Size: " + list3.size());
-        System.out.println("Is empty? " + list3.isEmpty());
-
-        // Iterating the list
-        System.out.println("Final list3 elements:");
-        for (String fruit : list3) {
+        // Iterating using for-each loop
+        System.out.println("Elements in Set:");
+        for (String fruit : fruits) {
             System.out.println(fruit);
         }
 
-        // Conversion: ArrayList to Array
-        String[] arrayFromList = list3.toArray(new String[0]);
-        System.out.println("Converted to Array: " + Arrays.toString(arrayFromList));
+        // addAll()
+        Set<String> tropicalFruits = new HashSet<>(Arrays.asList("Mango", "Pineapple"));
+        fruits.addAll(tropicalFruits);
 
-        // Conversion: Array to ArrayList
-        String[] fruitsArray = {"Grapes", "Honeydew", "Indian Fig"};
-        ArrayList<String> listFromArray = new ArrayList<>(Arrays.asList(fruitsArray));
-        System.out.println("Array to ArrayList: " + listFromArray);
+        // Final set after addAll
+        System.out.println("After addAll:");
+        System.out.println(fruits);
 
-        // Making list thread-safe
-        ArrayList<String> syncList = new ArrayList<>(listFromArray);
-        Collections.synchronizedList(syncList);
-
-        // Clear the list
-        list3.clear();
-        System.out.println("After clear, list3 is empty? " + list3.isEmpty());
+        // Clear the set
+        fruits.clear();
+        System.out.println("Is set empty now? " + fruits.isEmpty());
 
         
     }           

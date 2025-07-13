@@ -825,7 +825,7 @@ public class DequeExample {
 ```java
 Set<String> set1 = new HashSet<>();
 Set<String> set2 = new HashSet<>(20); // with initial capacity
-Set<String> set3 = new HashSet<>(existingCollection);
+Set<String> set3 = new HashSet<>(Collection<? extends E> c);
 ```
 
 **Code Example**
