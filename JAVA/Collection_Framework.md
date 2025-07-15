@@ -1378,6 +1378,165 @@ System.out.println(names); // [Spike, Jerry]
 - Enumeration is outdated; use Iterator instead.
 - Use Spliterator for parallelism in streams (Java 8+).
 
+---
+
+
+
+# 🧰 Collections Utility Class (java.util.Collections)
+- A utility class in java.util that provides static methods to operate on or return collections (like List, Set, etc.).
+- Works with Collection objects (not to be confused with the Collection interface).
+
+
+**Commonly Used Methods:**
+| Method                                              | Description                                          |
+| --------------------------------------------------- | ---------------------------------------------------- |
+| `sort(List<T> list)`                                | Sorts the list in ascending order (natural ordering) |
+| `sort(List<T> list, Comparator<T> c)`               | Sorts using a custom comparator                      |
+| `reverse(List<?> list)`                             | Reverses the order of elements                       |
+| `shuffle(List<?> list)`                             | Randomly shuffles the list                           |
+| `min(Collection<? extends T> coll)`                 | Returns the minimum element                          |
+| `max(Collection<? extends T> coll)`                 | Returns the maximum element                          |
+| `frequency(Collection<?> c, Object o)`              | Returns count of the element in collection           |
+| `disjoint(Collection<?> c1, Collection<?> c2)`      | Returns true if no elements in common                |
+| `copy(List<? super T> dest, List<? extends T> src)` | Copies all elements from source to destination       |
+
+
+**Example**
+```java
+import java.util.*;
+
+public class CollectionsExample {
+    public static void main(String[] args) {
+        List<String> names = Arrays.asList("John", "Alice", "Bob");
+        
+        Collections.sort(names);
+        System.out.println("Sorted: " + names);
+        
+        Collections.reverse(names);
+        System.out.println("Reversed: " + names);
+        
+        Collections.shuffle(names);
+        System.out.println("Shuffled: " + names);
+        
+        System.out.println("Max: " + Collections.max(names));
+        System.out.println("Frequency of 'Bob': " + Collections.frequency(names, "Bob"));
+    }
+}
+```
+
+---
+## Comparable Interface
+- Used to define the natural order of objects. The class must implement Comparable<T> and override `compareTo().`
+```java
+public interface Comparable<T> {
+    int compareTo(T o);
+}
+```
+
+- Returns:
+  - 0 → equal
+  - < 0 → current object is less
+  - > 0 → current object is greater
+
+
+**Example**
+```java
+import java.util.*;
+
+class Student implements Comparable<Student> {
+    int id;
+    String name;
+
+    Student(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    public int compareTo(Student other) {
+        return this.id - other.id; // Natural order by ID
+    }
+
+    public String toString() {
+        return id + " - " + name;
+    }
+}
+
+public class ComparableExample {
+    public static void main(String[] args) {
+        List<Student> students = new ArrayList<>();
+        students.add(new Student(2, "Alice"));
+        students.add(new Student(1, "John"));
+        students.add(new Student(3, "Bob"));
+
+        Collections.sort(students);
+        System.out.println("Sorted by ID: " + students);
+    }
+}
+```
+
+--- 
+
+## Comparator Interface
+- Used for custom sorting logic, typically passed to Collections.sort().
+```java
+public interface Comparator<T> {
+    int compare(T o1, T o2);
+}
+```
+
+**Example 1: Comparator for Sorting by Name**
+```java
+import java.util.*;
+
+class Student {
+    int id;
+    String name;
+
+    Student(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    public String toString() {
+        return id + " - " + name;
+    }
+}
+
+class NameComparator implements Comparator<Student> {
+    public int compare(Student s1, Student s2) {
+        return s1.name.compareTo(s2.name); // Sort by name
+    }
+}
+
+public class ComparatorExample {
+    public static void main(String[] args) {
+        List<Student> students = new ArrayList<>();
+        students.add(new Student(2, "Alice"));
+        students.add(new Student(1, "John"));
+        students.add(new Student(3, "Bob"));
+
+        Collections.sort(students, new NameComparator());
+        System.out.println("Sorted by Name: " + students);
+    }
+}
+```
+
+**Example 2: Using Lambda for Comparator**
+```java
+Collections.sort(students, (s1, s2) -> s1.name.compareTo(s2.name));
+```
+
+**Summary**
+| Feature      | Comparable               | Comparator                           |
+| ------------ | ------------------------ | ------------------------------------ |
+| Interface    | `Comparable<T>`          | `Comparator<T>`                      |
+| Method       | `compareTo(T o)`         | `compare(T o1, T o2)`                |
+| Sorting Type | Natural ordering         | Custom ordering                      |
+| Location     | Implemented in the class | Separate class or lambda expression  |
+| Usage        | `Collections.sort(list)` | `Collections.sort(list, comparator)` |
+
+
+
 
 ---
 
