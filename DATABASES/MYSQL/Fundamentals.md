@@ -1010,6 +1010,7 @@ WHERE Name = 'Alice';
 
 **🧮 3. Aggregate Functions**
 - Aggregate functions operate on a set of values and return a single result.
+
 | Function  | Description          |
 | --------- | -------------------- |
 | `COUNT()` | Total number of rows |
@@ -1137,6 +1138,7 @@ GROUP BY Category
 HAVING AVG(Price) > 50;
 ```
 
+![](https://www.sisense.com/wp-content/uploads/2024/07/image-1-order-blog.jpg)
 --- 
 ## UPDATION
 - The UPDATE statement is used to modify existing records in a table.
