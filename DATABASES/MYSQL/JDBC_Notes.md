@@ -20,22 +20,47 @@
 `a. Two-tier Architecture`
 - Java application directly communicates with the database.
 - Suitable for small applications.
+- `Client Application (Java) -> JDBC Driver -> Database`
 
 `b. Three-tier Architecture`
 - Java application → JDBC → Middleware (like a server) → Database.
 - Used in enterprise applications for scalability and security.
-
+- `Client Application -> Application Server -> JDBC Driver -> Database`
 
 
 ![](https://media.geeksforgeeks.org/wp-content/uploads/20250117153514606749/JDBC-Architecture.webp)
-**🔹JDBC Drivers**
+
+- Application: It can be a Java application or servlet that communicates with a data source.
+- The JDBC API: It allows Java programs to execute SQL queries and get results from the database. Some key components of JDBC API include
+    - Interfaces like Driver, ResultSet, RowSet, PreparedStatement, and Connection that helps managing different database tasks.
+    - Classes like DriverManager, Types, Blob, and Clob that helps managing database connections.
+- DriverManager: It plays an important role in the JDBC architecture. It uses some database-specific drivers to effectively connect enterprise applications to databases.
+- JDBC drivers: These drivers handle interactions between the application and the database.
+
+
+### JDBC Components
+
+**🔹 1. JDBC API**
+- It provides simple ways to interact with databases through two main packages:
+    - java.sql (Java SE): Offers core features like connecting to databases, running queries, and handling results.
+    - javax.sql (Java EE): Extends java.sql with advanced features like connection pooling and data source management.
+
+- It also provides a standard to connect a database to a client application.
+
+**🔹2. JDBC Driver Manager**
+- Driver manager is responsible for loading the correct database-specific driver to establish a connection with the database. 
+- It manages the available drivers and ensures the right one is used to process user requests and interact with the database.
+
+**🔹3. JDBC Test Suite**
+- It is used to test the operation(such as insertion, deletion, updating) being performed by JDBC Drivers.
+
+**🔹4. JDBC Drivers**
 - In JDBC, a Driver is a Java class that implements the java.sql.Driver interface. 
 - It acts as a middleware that connects Java applications to a specific database.
 - A JDBC driver is mandatory to establish a DB connection.
 - Each DB vendor (like Oracle, MySQL, PostgreSQL) provides its own driver JAR file.
 - Incorrect or missing driver leads to exceptions like ClassNotFoundException or SQLException.
 
-```java
 
 ```
 | Type   | Description             | Example           |
@@ -44,19 +69,31 @@
 | Type 2 | Native-API Driver       | Oracle OCI        |
 | Type 3 | Network Protocol Driver | Middleware server |
 | Type 4 | Thin Driver (Pure Java) | MySQL Connector/J |
-
-> ➡️ Type 4 is most commonly used.
+```
+- ➡️ Type 4 is most commonly used.
 
 
 ```java
 Class.forName("com.mysql.cj.jdbc.Driver");  // Load the MySQL JDBC driver
 Connection con = DriverManager.getConnection(
     "jdbc:mysql://localhost:3306/mydb", "user", "password");
-
 ```
+
 - The com.mysql.cj.jdbc.Driver:
     - Is the Type 4 (Pure Java) MySQL driver.
     - Converts Java JDBC calls directly into the MySQL-specific protocol.
+
+
+| **RDBMS** | **JDBC Driver Name**              | **URL Format**                                       |
+| --------- | --------------------------------- | ---------------------------------------------------- |
+| MySQL     | `com.mysql.cj.jdbc.Driver`        | `jdbc:mysql://hostname/databaseName`                 |
+| Oracle    | `oracle.jdbc.driver.OracleDriver` | `jdbc:oracle:thin:@hostname:portNumber:databaseName` |
+| DB2       | `COM.ibm.db2.jdbc.net.DB2Driver`  | `jdbc:db2:hostname:portNumber/databaseName`          |
+| Sybase    | `com.sybase.jdbc.SybDriver`       | `jdbc:sybase:Tds:hostname:portNumber/databaseName`   |
+
+
+
+---
 
 **🔹 JDBC API Components**
 | Interface           | Description                             |
@@ -112,8 +149,11 @@ con.close();
 | Performance | Slower                  | Precompiled                        | Optimized               |
 | Example     | `"SELECT * FROM users"` | `"SELECT * FROM users WHERE id=?"` | `"{call getUser(?)}"`   |
 
+---
 
-###🔹ResultSet
+
+### ResultSet
+
 **🔸 Navigation Methods**
 - rs.next(), rs.previous(), rs.first(), rs.last()
 - rs.absolute(int row)
