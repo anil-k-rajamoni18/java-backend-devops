@@ -1,69 +1,58 @@
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.Period;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Predicate;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
-
-class Employee {
-    int id;
-    String name;
-    double salary;
-    String department;
-
-    Employee(int id, String name, double salary, String department) {
-        this.id = id;
-        this.name = name;
-        this.salary = salary;
-        this.department = department;
-    }
-
-    public String toString() {
-        return id + " - " + name + " - " + salary + " - " + department;
-    }
-
-    public double getSalary() { return salary; }
-    public String getName() { return name; }
-    public String getDepartment() { return department; }
-}
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.*;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 
 public class Example  {
-    public static void main(String[] args) {        
-        ZonedDateTime zoned = ZonedDateTime.now(ZoneId.of("America/Chicago"));
-        System.out.println(zoned);
+    public static void main(String[] args) throws Exception {
 
-        Set<String> zones = ZoneId.getAvailableZoneIds(); // All timezones
-        System.out.println(zones);
+        //callApiBeforeJava10();
+        callApiInJava11();
 
     }
-    
-   public static List<Employee> getEmployees() {
-    // Let's assume this list:
-        List<Employee> employees = Arrays.asList(
-            new Employee(101, "Amit Sharma", 55000, "IT"),
-            new Employee(102, "Priya Verma", 62000, "Finance"),
-            new Employee(103, "Ravi Kumar", 48000, "HR"),
-            new Employee(104, "Sneha Iyer", 75000, "Marketing"),
-            new Employee(105, "Ankit Gupta", 42000, "IT"),
-            new Employee(106, "Neha Joshi", 83000, "Finance"),
-            new Employee(107, "Rahul Mehta", 51000, "Sales"),
-            new Employee(108, "Kavita Reddy", 69000, "Marketing"),
-            new Employee(109, "Manish Singh", 57000, "HR"),
-            new Employee(110, "Divya Nair", 61000, "Sales")
-        );
-        return employees;
-   }
+
+    public static void callApiInJava11(){
+        HttpClient httpClient = java.net.http.HttpClient.newHttpClient();
+        HttpRequest httpRequest = HttpRequest.newBuilder()
+        .uri(URI.create("https://indian-stock-exchange-api2.p.rapidapi.com/stock?name=tata%20steel"))
+        .GET()
+        .header("x-rapidapi-host", "indian-stock-exchange-api2.p.rapidapi.com")
+        .header("x-rapidapi-key", "b576270b21mshfe21cc7345bfd38p1a1d6ajsn71bb2f6c9db2")
+        .build();
+
+        httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString())
+        .thenApply(HttpResponse::body)
+        .thenAccept(System.out::println)
+        .join();
+
+    }
+
+    public static void callApiBeforeJava10()throws Exception {
+        URL url  = new URL("https://indian-stock-exchange-api2.p.rapidapi.com/stock?name=tata%20steel");
+        HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
+        
+        httpURLConnection.setRequestMethod("GET");
+        httpURLConnection.setRequestProperty("Content-Type", "application/json");
+        httpURLConnection.setRequestProperty("x-rapidapi-host", "indian-stock-exchange-api2.p.rapidapi.com");
+        httpURLConnection.setRequestProperty("x-rapidapi-key", "b576270b21mshfe21cc7345bfd38p1a1d6ajsn71bb2f6c9db2");
+
+        int responseStatusCode = httpURLConnection.getResponseCode();
+        if (responseStatusCode == 200) {
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(httpURLConnection.getInputStream()));
+            String inputLine; 
+            StringBuffer response = new StringBuffer();
+
+            while((inputLine = bufferedReader.readLine()) != null) {
+                response.append(inputLine);   
+            }
+            bufferedReader.close();
+
+            System.out.println("Response from API: " + response.toString());
+        } else {
+            System.out.println("Failed to retrive the data from api: status codE: " + responseStatusCode);
+        }
+    }
 }
 
