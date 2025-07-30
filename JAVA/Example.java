@@ -8,8 +8,19 @@ import java.net.http.HttpResponse;
 public class Example  {
     public static void main(String[] args) throws Exception {
 
-        //callApiBeforeJava10();
-        callApiInJava11();
+        // callApiBeforeJava10();
+        // callApiInJava11();
+        try {
+            // Get the local host (your computer)
+            InetAddress localHost = InetAddress.getLocalHost();
+
+            // Print IP address and hostname
+            System.out.println("IP Address: " + localHost.getHostAddress());
+            System.out.println("Host Name: " + localHost.getHostName());
+        } catch (UnknownHostException e) {
+            System.out.println("Unable to retrieve IP address: " + e.getMessage());
+        }
+
 
     }
 
