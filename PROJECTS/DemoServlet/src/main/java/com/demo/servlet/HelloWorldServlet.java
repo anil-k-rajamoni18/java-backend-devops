@@ -22,6 +22,6 @@ public class HelloWorldServlet extends HttpServlet {
         PrintWriter out = response.getWriter();
         ZonedDateTime dateTime = ZonedDateTime.now();
         String timeTag = String.format("<p> current date: %s </p>", dateTime);
-        out.println("<h1>Hello, World! 🌍</h1><br>" + timeTag);
+        out.println("<h1>Hello, World to Servlets! 🌍</h1><br>" + timeTag);
     }
 }

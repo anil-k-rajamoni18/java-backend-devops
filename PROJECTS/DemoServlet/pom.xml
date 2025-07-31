@@ -23,6 +23,6 @@
     </dependency>
   </dependencies>
   <build>
-    <finalName>DemoServlet</finalName>
+    <finalName>demoservlet</finalName>
   </build>
 </project>

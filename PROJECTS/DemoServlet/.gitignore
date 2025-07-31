@@ -33,6 +33,8 @@ build/
 
 ### VS Code ###
 .vscode/
+.smarttomcat/
+conf/
 
 ### Mac OS ###
 .DS_Store
