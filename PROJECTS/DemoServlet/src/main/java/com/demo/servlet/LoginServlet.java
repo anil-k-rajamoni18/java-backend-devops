@@ -15,6 +15,9 @@ public class LoginServlet extends HttpServlet {
         String user = request.getParameter("username");
         String pass = request.getParameter("password");
 
+        String test = null;
+        System.out.println(test.length());
+
         // Hardcoded credentials
         if ("admin".equals(user) && "password123".equals(pass)) {
             // Redirect to welcome page

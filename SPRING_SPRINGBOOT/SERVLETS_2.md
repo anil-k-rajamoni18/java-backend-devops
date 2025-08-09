@@ -480,7 +480,7 @@ try {
     e.printStackTrace();
     response.getWriter().println("Something went wrong! ❌");
 }
-```\
+```
 
 **📄 Option 2: Error Handling in web.xml**
 ```xml
