@@ -1,3 +1,62 @@
+## What is a Build Tool?
+- A build tool is a software utility that automates the process of converting source code into an executable application.
+- It typically handles:
+  - Compilation (Java source → bytecode)
+  - Packaging (e.g., JAR, WAR)
+  - Dependency management 
+  - Testing
+  - Deployment
+
+> Think of it as your project’s “chef” — you give it ingredients (source code, dependencies, configs) and it serves you the final dish (working application).
+
+### Why is a Build Tool Needed?
+- Without a build tool, you’d have to:
+  - Manually compile each .java file with javac
+  - Manually package them into a JAR/WAR
+  - Track and download all library dependencies yourself
+  - Run tests manually
+  - Deploy manually
+
+- Build tools solve these problems by:
+  - Automating repetitive tasks
+  - Ensuring consistency across environments
+  - Managing dependencies (downloads, versioning)
+  - Integrating with CI/CD pipelines for automated builds and deployment
+
+
+### Types of Build Tools for Java
+| **Category**                                  | **Examples**               | **Key Features**                                                                  |
+| --------------------------------------------- | -------------------------- | --------------------------------------------------------------------------------- |
+| **Traditional Build Tools**                   | **Apache Ant**             | XML-based, very flexible but verbose, procedural approach                         |
+| **Convention-over-Configuration Build Tools** | **Apache Maven**           | XML-based, uses conventions for project structure, built-in dependency management |
+| **Modern/Declarative Build Tools**            | **Gradle**                 | Groovy/Kotlin DSL, faster builds, flexible, supports multi-language projects      |
+| **Specialized Build/Automation Tools**        | **SBT (Scala)**, **Bazel** | Optimized for specific languages or large-scale builds                            |
+
+
+
+###  Popular Java Build Tools
+a) Apache Ant
+  - First widely used Java build tool
+  - Procedural — you tell it how to build
+  - No built-in dependency management (needs Ivy)
+
+b) Apache Maven
+  - Declarative — you describe what to build
+  - Uses a pom.xml file for configuration
+  - Built-in dependency management via Maven Central
+
+c) Gradle
+  - Combines Ant’s flexibility and Maven’s conventions
+  - Uses Groovy/Kotlin DSL instead of XML
+  - Supports incremental builds for speed
+
+**When to Choose Which?**
+- Ant → Legacy projects or very custom build logic
+- Maven → Standard enterprise apps with well-defined dependencies
+- Gradle → Modern projects needing speed, flexibility, and multi-language support
+
+
+
 ## Maven 
 - Apache Maven is a build automation and project management tool used primarily for Java-based applications. 
 - It simplifies the build process like compiling code, packaging binaries, managing dependencies, documentation, and deployment.
@@ -460,3 +519,83 @@ project-root/
   </mirror>
 </mirrors>
 ```
+---
+
+### Maven settings.xml
+- A Maven configuration file for local/environment-specific settings.
+- Not part of the project (pom.xml is for project-specific config).
+- Locations:
+  - User-level: ~/.m2/settings.xml → affects only your user
+  - Global-level: ${MAVEN_HOME}/conf/settings.xml → affects all users on the machine
+
+**Why is it Needed?**
+- To configure Maven behavior without changing the project pom.xml.
+- Store environment-specific info like:
+  - Repository credentials
+  - Proxy settings
+  - Mirror configuration
+  - Local repository path
+  - Build profiles
+
+**Common Usages**
+| **Purpose**                        | **Example**                                        |
+| ---------------------------------- | -------------------------------------------------- |
+| **Private Repository Credentials** | `<servers>` block with username/password           |
+| **Repository Mirrors**             | `<mirrors>` block to use Nexus/Artifactory         |
+| **Proxy Config**                   | `<proxies>` block for corporate proxy              |
+| **Profiles**                       | `<profiles>` block for dev/test/prod settings      |
+| **Local Repo Path**                | `<localRepository>` tag to change default location |
+
+
+**Example settings.xml**
+```xml
+<settings>
+    <localRepository>/opt/maven/repo</localRepository>
+
+    <servers>
+        <server>
+            <id>private-repo</id>
+            <username>admin</username>
+            <password>secret</password>
+        </server>
+    </servers>
+
+    <mirrors>
+        <mirror>
+            <id>nexus</id>
+            <mirrorOf>*</mirrorOf>
+            <url>http://nexus.company.com/repo/maven-public/</url>
+        </mirror>
+    </mirrors>
+
+    <proxies>
+        <proxy>
+            <id>proxy1</id>
+            <active>true</active>
+            <protocol>http</protocol>
+            <host>proxy.company.com</host>
+            <port>8080</port>
+            <username>proxyuser</username>
+            <password>proxypass</password>
+        </proxy>
+    </proxies>
+
+    <profiles>
+        <profile>
+            <id>dev</id>
+            <properties>
+                <env>development</env>
+            </properties>
+        </profile>
+    </profiles>
+</settings>
+```
+
+**Key Differences — pom.xml vs settings.xml**
+| **`pom.xml`**                  | **`settings.xml`**                       |
+| ------------------------------ | ---------------------------------------- |
+| Project-specific config        | Environment/user-specific config         |
+| Shared in version control      | Not committed to version control         |
+| Declares dependencies, plugins | Configures mirrors, proxies, credentials |
+| Same for all devs              | Can differ per developer                 |
+
