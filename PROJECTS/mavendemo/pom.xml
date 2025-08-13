@@ -13,15 +13,32 @@
     <groupId>com.learn</groupId>
     <artifactId>mavendemo</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
     <name>demo</name>
     <description>Demo project for Spring Boot</description>
+    <modules>
+        <module>module-core</module>
+        <module>module-web</module>
+        <module>module-service</module>
+    </modules>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
+    <repositories>
+        <repository>
+            <id>company-internal</id>
+            <url>https://repo.company.com/maven2</url>
+        </repository>
+
+        <repository>
+            <id>jboss</id>
+            <url>https://repository.jboss.org/nexus/content/groups/public/</url>
+        </repository>
+    </repositories>
 
     <dependencies>
 
@@ -39,27 +56,103 @@
         </dependency>
 
         <dependency>
+            <groupId>org.elasticsearch</groupId>
+            <artifactId>elasticsearch</artifactId>
+            <version>9.1.2</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+            <version>3.5.4</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
     </dependencies>
 
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.mysql</groupId>
+                <artifactId>mysql-connector-j</artifactId>
+                <version>8.4.0</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <profiles>
+         <!-- Development profile -->
+        <profile>
+            <id>dev</id>
+            <properties>
+                <env.name>Development</env.name>
+                <env.message>Hello from Development profile!</env.message>
+                <db.url>jdbc:mysql://localhost/devdb</db.url>
+            </properties>
+            <dependencies>
+                <!-- Example: a logging dependency only for dev -->
+                <dependency>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                    <version>2.0.17</version>
+                </dependency>
+            </dependencies>
+        </profile>
+
+
+
+        <profile>
+            <id>test</id>
+            <properties>
+                <env.name>Testing</env.name>
+                <env.message>Hello from Testing profile!</env.message>
+                <db.url>jdbc:mysql://localhost/testdb</db.url>
+            </properties>
+        </profile>
+
+
+        <!-- Production profile -->
+        <profile>
+            <id>prod</id>
+            <properties>
+                <env.name>Production</env.name>
+                <env.message>Hello from Production profile!</env.message>
+                <db.url>jdbc:mysql://prod-server/proddb</db.url>
+            </properties>
+            <dependencies>
+                <!-- Example: different logging impl for prod -->
+                <dependency>
+                    <groupId>ch.qos.logback</groupId>
+                    <artifactId>logback-classic</artifactId>
+                    <version>1.5.18</version>
+                    <scope>compile</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
+
     <build>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <excludes>
-                        <exclude>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                        </exclude>
-                    </excludes>
-                </configuration>
-            </plugin>
-        </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>config.properties</include>
+                </includes>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
     </build>
 
-</project>
+  </project>
