@@ -221,7 +221,7 @@ dependencies {
 **1. Simple inline task**
 - This is the fastest way to define a task directly in build.gradle:
 ```groovy
-task hello {
+tasks.register("hello") {
     doLast {
         println 'Hello Gradle!'
     }

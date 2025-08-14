@@ -1,4 +1,3 @@
 package com.learn;
 
-public class Student {
-}
+public record Student(String name, int age, double collegeFee) {}

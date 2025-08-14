@@ -1,0 +1,48 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'com.learn'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+application {
+    mainClass = "com.learn.Main"
+}
+dependencies {
+    implementation 'org.slf4j:slf4j-api:2.0.9'
+    implementation 'org.apache.commons:commons-lang3'
+    constraints {
+        implementation('org.apache.commons:commons-lang3:3.12.0') {
+            because 'Ensure compatibility'
+        }
+    }
+    compileOnly 'org.projectlombok:lombok:1.18.28'
+    runtimeOnly 'ch.qos.logback:logback-classic:1.4.11'
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+tasks.register("hello") {
+    doFirst {
+        print("Performing task at first")
+    }
+}
+
+compileJava {
+    dependsOn("hello")
+    dependsOn("copyFiles")
+}
+
+tasks.register('copyFiles', Copy) {
+    from 'src/main/resources'
+    into "${layout.buildDirectory.get()}/copied-resources"
+}
