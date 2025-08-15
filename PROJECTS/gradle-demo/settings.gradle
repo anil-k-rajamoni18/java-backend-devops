@@ -1,2 +1,3 @@
 rootProject.name = 'gradle-demo'
+include 'core-module','util-module'
 

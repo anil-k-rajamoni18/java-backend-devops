@@ -1,6 +1,6 @@
 # 🌱 Spring Framework
 
-### 1️Introduction to Spring Framework
+### Introduction to Spring Framework
 - Spring Framework is a lightweight, open-source Java framework that helps you build enterprise-level applications easily and flexibly.
 - It provides tools, libraries, and patterns that make application development faster, cleaner, and more maintainable.
 - Think of it like a toolbox for Java developers 🧰 — it gives you:
@@ -41,6 +41,7 @@
     - That’s how Spring was born.
 
 - Spring was developed to solve three main pain points of early enterprise Java:
+
 | Problem                | Before Spring                                     | Spring’s Solution                           |
 | ---------------------- | ------------------------------------------------- | ------------------------------------------- |
 | **Complexity**         | Heavy EJBs, lots of boilerplate                   | Lightweight POJOs (Plain Old Java Objects)  |
@@ -395,4 +396,186 @@ private PaymentService paymentService;
 - Prefer constructor injection for required dependencies.
 - Use interfaces for dependencies to enable swapping implementations.
 - Use @Qualifier if multiple beans implement the same interface.
-- Keep your services focused — avoid injecting too many dependencies (signals high coupling).
+
+
+Keep your services focused — avoid injecting too many dependencies (signals high coupling).
+---
+## Spring Beans
+- In the Spring Framework, a bean is simply an object that is instantiated, assembled, and managed by the Spring IoC (Inversion of Control) container.
+- The container takes responsibility for:
+    - Creating bean instances
+    - Injecting dependencies into beans
+    - Configuring beans (properties, scope, etc.)
+    - Managing their complete lifecycle
+- This concept is at the heart of Spring’s dependency injection mechanism.
+
+
+**How Beans Are Defined**
+- Beans can be declared in three primary ways:
+
+`a) Annotation-based (Modern Approach)`
+- Annotations such as @Component, @Service, @Repository, or @Controller tell Spring to scan and register the class as a bean.
+
+```java
+@Component
+public class PaymentProcessor { }
+```
+
+`b) Java-based Configuration`
+- Using @Configuration and @Bean, beans can be declared in a class that acts as a factory.
+```java
+@Configuration
+public class AppConfig {
+    @Bean
+    public PaymentProcessor paymentProcessor() {
+        return new PaymentProcessor();
+    }
+}
+```
+
+`c) XML-based Configuration (Legacy)`
+- Older Spring apps used XML to define beans.
+```xml
+<bean id="paymentProcessor" class="com.example.PaymentProcessor"/>
+
+```
+
+**Bean Naming**
+- Default name = class name with lowercase first letter (invoiceService)
+- Can be overridden using:
+```java
+@Component("customBeanName")
+public class InvoiceService { }
+```
+
+### Bean Scopes
+- Scope determines how many instances of a bean exist in the container.
+- The scope determines how long a bean exists and how it is shared.
+
+| Scope           | Description                                                                                      | Default?  | Availability                 |
+| --------------- | ------------------------------------------------------------------------------------------------ | --------- | ---------------------------- |
+| **singleton**   | One bean instance per Spring IoC container. All requests for that bean return the same instance. | ✅ Default | All Spring applications      |
+| **prototype**   | A new bean instance is created *every time* it is requested from the container.                  | ❌         | All Spring applications      |
+| **request**     | A new bean is created for each HTTP request, valid only during that request.                     | ❌         | Web-aware ApplicationContext |
+| **session**     | One bean instance per HTTP session.                                                              | ❌         | Web-aware ApplicationContext |
+| **application** | One bean instance per `ServletContext`.                                                          | ❌         | Web-aware ApplicationContext |
+| **websocket**   | One bean instance per WebSocket session.                                                         | ❌         | Web-aware ApplicationContext |
+
+
+```java
+@Component
+@Scope("prototype")
+public class MyService { }
+```
+- If prototype is set, each getBean() call returns a fresh object.
+
+### Spring Bean Life Cycle
+- Spring manages beans through well-defined creation and destruction phases.
+
+**Lifecycle Steps**
+
+`1. Instantiation`
+- Spring creates the bean instance (using constructor or factory method).
+
+`2. Populate Properties`
+- Spring injects dependencies (via setter, field injection, or constructor args).
+
+`3. Bean Name Aware (optional)`
+- If the bean implements BeanNameAware, Spring passes the bean's name.
+
+`4. Bean Factory Aware / Application Context Aware (optional)`
+- If implementing BeanFactoryAware or ApplicationContextAware, Spring injects the container reference.
+
+`5. Post-Processors: Before Initialization`
+- Any BeanPostProcessor’s postProcessBeforeInitialization() is called.
+
+`6. Custom Initialization Method`
+- If implementing InitializingBean.afterPropertiesSet() or defining init-method in config, it’s called here.
+
+`7. Post-Processors: After Initialization`
+- Any BeanPostProcessor’s postProcessAfterInitialization() is called.
+
+`8. Bean is Ready for Use`
+- The bean is now fully managed and can be used by the application.
+
+`9. Destruction Phase`
+- When the container shuts down:
+- If the bean implements DisposableBean.destroy() or a destroy-method is configured, that runs.
+- @PreDestroy methods are also called.
+
+```java
+@Component
+public class MyBean implements InitializingBean, DisposableBean {
+
+    @PostConstruct
+    public void postConstruct() {
+        System.out.println("PostConstruct called");
+    }
+
+    @Override
+    public void afterPropertiesSet() {
+        System.out.println("InitializingBean afterPropertiesSet");
+    }
+
+    @PreDestroy
+    public void preDestroy() {
+        System.out.println("PreDestroy called");
+    }
+
+    @Override
+    public void destroy() {
+        System.out.println("DisposableBean destroy");
+    }
+}
+```
+
+**Lifecycle Sequence (Singleton Example)**
+1. **Instantiate bean**  
+2. **Inject dependencies**  
+3. **Set Aware interface properties**  
+4. **Call** `BeanPostProcessor.postProcessBeforeInitialization()`  
+5. **Call** `@PostConstruct` **or** `afterPropertiesSet()`  
+6. **Call** `BeanPostProcessor.postProcessAfterInitialization()`  
+7. **Use bean**  
+8. **Call** `@PreDestroy` **or** `destroy()` **when shutting down**  
+
+### Bean vs POJO in Java
+
+**1. POJO (Plain Old Java Object)**
+- A regular Java object without any special restrictions.
+- No need to implement framework-specific interfaces.
+- Used for representing data or simple business logic.
+- Example 
+
+```java
+public class Customer {
+    private String name;
+    // getters and setters
+}
+```
+
+**2. Spring Bean**
+- A Java object that is managed by the Spring container.
+- Created, configured, and destroyed by Spring.
+- Requires Spring-specific annotations or XML config.
+```java
+@Component
+public class CustomerService {
+    public void saveCustomer(Customer customer) {
+        // save logic
+    }
+}
+```
+
+| Feature                  | POJO                                              | Spring Bean                                               |
+| ------------------------ | ------------------------------------------------- | --------------------------------------------------------- |
+| **Definition**           | Plain object with no special framework dependency | Managed object in Spring IoC container                    |
+| **Framework Dependency** | None                                              | Requires Spring Framework                                 |
+| **Lifecycle Management** | Controlled by developer                           | Controlled by Spring                                      |
+| **Configuration**        | No configuration                                  | Configured via annotations, Java config, or XML           |
+| **Scope**                | No concept of scope                               | Has multiple scopes (singleton, prototype, request, etc.) |
+| **Dependency Injection** | Done manually                                     | Done automatically by Spring                              |
+| **Example Use Case**     | Data transfer object                              | Service or DAO in a Spring app                            |
+
+
+- *Every Spring Bean is a POJO, but not every POJO is a Spring Bean.* The difference lies in container management and framework integration.

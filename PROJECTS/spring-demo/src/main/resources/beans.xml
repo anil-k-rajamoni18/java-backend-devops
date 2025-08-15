@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+           http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!-- Define a simple bean -->
+    <bean id="user" class="com.learn.module1.User">
+        <property name="name" value="Kumar" />
+        <property name="email" value="kumar@yahoo.com" />
+    </bean>
+    <bean id="emailService" class="com.learn.module2.EmailService"/>
+    <bean id="userService" class="com.learn.module2.UserService">
+        <constructor-arg ref="emailService"/>
+    </bean>
+
+</beans>
