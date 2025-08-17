@@ -396,9 +396,8 @@ private PaymentService paymentService;
 - Prefer constructor injection for required dependencies.
 - Use interfaces for dependencies to enable swapping implementations.
 - Use @Qualifier if multiple beans implement the same interface.
+- Keep your services focused — avoid injecting too many dependencies (signals high coupling).
 
-
-Keep your services focused — avoid injecting too many dependencies (signals high coupling).
 ---
 ## Spring Beans
 - In the Spring Framework, a bean is simply an object that is instantiated, assembled, and managed by the Spring IoC (Inversion of Control) container.
