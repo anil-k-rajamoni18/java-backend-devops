@@ -13,15 +13,15 @@
     - Validation, rules, transaction workflows.
 
 3. Persistence Layer (Repository)
-- JPA/Hibernate repositories for database access.
-- Entities mapping (Account, Loan, Transaction).
+  - JPA/Hibernate repositories for database access.
+  - Entities mapping (Account, Loan, Transaction).
 
 4. Database
-- Relational DB (MySQL/PostgreSQL).
-- Tables for accounts, loans, transactions, customers.
+  - Relational DB (MySQL/PostgreSQL).
+  - Tables for accounts, loans, transactions, customers.
 
 5. Security Layer
-- Spring Security (login, roles: Admin, Customer).
+  - Spring Security (login, roles: Admin, Customer).
 
 **Project Structure**
 ```less
