@@ -1,2 +1,17 @@
 server:
   port: 7788
+
+application:
+  title: spring-demo-app
+  version: 0.0.1-SNAPSHOT
+
+
+logging:
+  level:
+    root: INFO
+
+
+spring:
+  servlet:
+    multi-part:
+      max-file-size: 5MB

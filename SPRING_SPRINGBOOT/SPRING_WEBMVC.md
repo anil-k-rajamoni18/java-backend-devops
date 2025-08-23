@@ -291,10 +291,11 @@ HTML Form:
 ### 1) High-Level Overview**
 
 **Primary Users & Roles 👥**
-    Admin: manage users/roles, hospital configuration
-    Doctor: manage availability, view patient records, write notes/prescriptions
-    Receptionist: register patients, schedule/reschedule appointments, billing support
-    Patient: view/update profile, book appointments, view prescriptions & reports
+
+- Admin: manage users/roles, hospital configuration
+- Doctor: manage availability, view patient records, write notes/prescriptions
+- Receptionist: register patients, schedule/reschedule appointments, billing support
+- Patient: view/update profile, book appointments, view prescriptions & reports
 
 **Key Modules 🧩**
 - Identity & Access (AuthN/Z, RBAC)

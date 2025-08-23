@@ -14,7 +14,7 @@ public class BlockFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
         HttpServletRequest req = (HttpServletRequest) request;
-        log.info("requestURI: {}", req.getRequestURI());
+        log.info("[FILTER] URI: {}", req.getRequestURI());
         if (req.getRequestURI().equals("/favicon.ico")) {
             ((HttpServletResponse) response).sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
