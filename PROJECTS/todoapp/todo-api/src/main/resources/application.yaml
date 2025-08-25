@@ -1,0 +1,100 @@
+spring:
+  application:
+    name: todo-list-app
+
+  # H2 Database Configuration
+  datasource:
+    url: jdbc:h2:mem:tododb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: sa123
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+
+  # H2 Console Configuration
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: false
+        trace: false
+
+  # JPA/Hibernate Configuration
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: none  # Use 'create-drop' or 'validate' in development
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        dialect: org.hibernate.dialect.H2Dialect
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+  # Jackson Configuration
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+      indent-output: true
+    deserialization:
+      fail-on-unknown-properties: false
+    time-zone: UTC
+    date-format: yyyy-MM-dd HH:mm:ss
+
+# Server Configuration
+server:
+  port: 8080
+  servlet:
+    context-path: /
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: on_param
+    include-exception: false
+
+# Logging Configuration
+logging:
+  level:
+    com.learn.todoapp: INFO
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/todo-app.log
+    max-size: 10MB
+    max-history: 30
+
+# Management/Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when_authorized
+  info:
+    env:
+      enabled: true
+
+# Application Info
+info:
+  app:
+    name: Todo List Application
+    description: Production-ready Spring Boot TODO application
+    version: 1.0.0
+    developer: CaptainRocket
