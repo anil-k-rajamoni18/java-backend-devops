@@ -1,5 +1,7 @@
 package com.learn.springbootdemo.config;
 
+import com.learn.springbootdemo.filter.BlockFilter;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -9,6 +11,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+
+import java.util.List;
 
 @Configuration
 public class SecurityConfig {
@@ -39,6 +43,15 @@ public class SecurityConfig {
                 .formLogin(form -> form.permitAll());  // use basic form login for other endpoints
 
         return http.build();
+    }
+
+    @Bean
+    public FilterRegistrationBean<BlockFilter> filterFilterRegistrationBean() {
+        FilterRegistrationBean<BlockFilter> registrationBean = new FilterRegistrationBean<>();
+        registrationBean.setFilter(new BlockFilter());
+        registrationBean.setUrlPatterns(List.of("/*"));
+        registrationBean.setOrder(1);
+        return registrationBean;
     }
 }
 

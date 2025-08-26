@@ -6,8 +6,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.Arrays;
-
 @ComponentScan(basePackages = "com.learn.springbootdemo")
 @EnableAutoConfiguration
 @Configuration
