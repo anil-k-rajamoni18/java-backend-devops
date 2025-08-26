@@ -1,0 +1,4 @@
+package com.learn.springbootdemo.dto;
+
+public class ApiError {
+}
