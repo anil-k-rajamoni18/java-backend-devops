@@ -2,6 +2,7 @@ package com.learn.springbootdemo.service.impl;
 
 import com.learn.springbootdemo.dto.UserDto;
 import com.learn.springbootdemo.entity.User;
+import com.learn.springbootdemo.handler.UserNotFoundException;
 import com.learn.springbootdemo.mapper.UserMapper;
 import com.learn.springbootdemo.repository.UserRepository;
 import com.learn.springbootdemo.service.UserService;
@@ -46,7 +47,7 @@ public class UserImpl implements UserService  {
     @Override
     public UserDto getUserById(Long id) {
         Optional<User> userOptional = userRepository.getUserById(id);
-        User user = userOptional.orElseThrow(() -> new RuntimeException("User Not Found with Id: " + id));
+        User user = userOptional.orElseThrow(() -> new UserNotFoundException("User Not Found with Id: " + id));
         return UserMapper.toDto(user);
     }
 
@@ -69,7 +70,7 @@ public class UserImpl implements UserService  {
     @Override
     public UserDto updateUser(Long id, UserDto userDto) {
         User existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + id));
 
         existingUser.setName(userDto.getName());
         existingUser.setEmail(userDto.getEmail());

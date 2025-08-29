@@ -26,4 +26,8 @@ public class ApiClientService {
     public boolean deactivateClient(String clientId) {
         return apiClientRepository.deactivateByClientId(clientId) > 0;
     }
+
+    public ApiClient findByClientId(String clientId) {
+        return apiClientRepository.findByClientId(clientId);
+    }
 }

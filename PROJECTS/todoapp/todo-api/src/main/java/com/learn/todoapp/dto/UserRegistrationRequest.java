@@ -27,4 +27,8 @@ public class UserRegistrationRequest {
     @NotBlank(message = "Last name is required")
     @Size(max = 50, message = "Last name cannot exceed 50 characters")
     private String lastName;
+
+    @NotBlank(message = "role is required")
+    @Size(max = 50, message = "role cannot exceed 5 characters")
+    private String roles;
 }

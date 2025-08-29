@@ -17,6 +17,8 @@ public class User {
     private String email;
     private String password; // Should NOT be exposed in API
     private Boolean active;
+    @Column(name= "address")
+    private String currentAddress;
 
     public User(String name, String email, boolean active) {
         this.name = name;

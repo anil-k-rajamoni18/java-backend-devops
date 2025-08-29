@@ -21,4 +21,6 @@ public interface ApiClientRepository extends JpaRepository<ApiClient, Long> {
     @Transactional
     @Query("UPDATE ApiClient a SET a.active = false WHERE a.clientId = :clientId")
     int deactivateByClientId(String clientId);
+
+    ApiClient findByClientId(String clientId);
 }

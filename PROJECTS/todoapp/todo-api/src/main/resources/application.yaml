@@ -27,7 +27,7 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
-      ddl-auto: none  # Use 'create-drop' or 'validate' in development
+      ddl-auto: update  # Use 'create-drop' or 'validate' in development
       naming:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
     show-sql: false
@@ -91,6 +91,12 @@ management:
     env:
       enabled: true
 
+
+# JWT configurations
+auth:
+  jwt:
+    jwtSecret: e9f76626647a6a2222ff327823a5d9c26f3e2b35f2622ca1e2aee24d2c63fab1
+    jwtExpiration: 3600
 # Application Info
 info:
   app:

@@ -1,6 +1,6 @@
 package com.learn.todoapp.filter;
 
-import com.learn.todoapp.utils.JwtUtils;
+import com.learn.todoapp.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,20 +42,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     // Paths that should be excluded from JWT authentication
     private static final List<String> EXCLUDED_PATHS = Arrays.asList(
-            "/api/auth/signin",
-            "/api/auth/signup",
-            "/api/auth/refresh",
-            "/api/public/",
+            "/api/auth/",
             "/swagger-ui/",
             "/v3/api-docs",
-            "/actuator/health"
+            "/actuator/health",
+            "/h2-console/",
+            "/"
     );
 
     @Autowired
-    private JwtUtils jwtUtils;
+    private UserDetailsService userDetailsService;
 
     @Autowired
-    private UserDetailsService userDetailsService;
+    private JwtService jwtService;
 
     /**
      * Main filter method that processes each HTTP request to validate JWT tokens.
@@ -78,7 +77,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String jwt = parseJwt(request);
 
             // Validate token and set authentication if valid
-            if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
+            if (jwt != null && jwtService.validateJwtToken(jwt)) {
                 setAuthenticationFromToken(jwt, request);
             } else if (jwt != null) {
                 logger.warn("Invalid JWT token received for request: {}", request.getRequestURI());
@@ -140,7 +139,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private void setAuthenticationFromToken(String jwt, HttpServletRequest request) {
         try {
             // Extract username from token
-            String username = jwtUtils.getUserNameFromJwtToken(jwt);
+            String username = jwtService.getUserNameFromJwtToken(jwt);
             logger.debug("Authenticating user: {}", username);
 
             // Load user details
@@ -180,7 +179,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-
+        // allow root "/"
+        if ("/".equals(path)) {
+            return true;
+        }
         // Skip filtering for excluded paths
         boolean shouldExclude = EXCLUDED_PATHS.stream()
                 .anyMatch(path::startsWith);
@@ -202,7 +204,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     public boolean hasValidToken(HttpServletRequest request) {
         try {
             String jwt = parseJwt(request);
-            return jwt != null && jwtUtils.validateJwtToken(jwt);
+            return jwt != null && jwtService.validateJwtToken(jwt);
         } catch (Exception e) {
             logger.debug("Token validation failed: {}", e.getMessage());
             return false;
@@ -220,7 +222,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String jwt = parseJwt(request);
             if (jwt != null) {
-                return jwtUtils.getUserNameFromJwtToken(jwt);
+                return jwtService.getUserNameFromJwtToken(jwt);
             }
         } catch (Exception e) {
             logger.debug("Failed to extract username from request: {}", e.getMessage());

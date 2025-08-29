@@ -30,6 +30,9 @@ public class User {
     @Column(name = "last_name")
     private String lastName;
 
+    @Column(name="roles")
+    private String roles;
+
     @Column(nullable = false)
     private boolean enabled = true;
 

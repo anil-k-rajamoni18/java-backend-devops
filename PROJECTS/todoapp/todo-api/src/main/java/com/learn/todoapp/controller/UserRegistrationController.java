@@ -1,25 +1,30 @@
 package com.learn.todoapp.controller;
 
-import com.learn.todoapp.dto.ClientCredentialsResponse;
-import com.learn.todoapp.dto.UserRegistrationRequest;
-import com.learn.todoapp.dto.UserRegistrationResponse;
+import com.learn.todoapp.dto.*;
 import com.learn.todoapp.enity.ApiClient;
 import com.learn.todoapp.enity.User;
 import com.learn.todoapp.exception.ErrorResponse;
 import com.learn.todoapp.service.ApiClientService;
+import com.learn.todoapp.service.JwtService;
 import com.learn.todoapp.service.UserService;
-import com.learn.todoapp.utils.ClientCredentialsGenerator;
+import com.learn.todoapp.utils.*;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.attribute.UserPrincipal;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,7 +49,10 @@ public class UserRegistrationController {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private ClientCredentialsGenerator credentialsGenerator;
+    private JwtService jwtService;
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
 
     /**
      * Register a new user and issue API client credentials.
@@ -228,6 +236,64 @@ public class UserRegistrationController {
         }
     }
 
+    /**
+     * Issue JWT token based on client credentials.
+     */
+    @PostMapping("/token")
+    public ResponseEntity<?> generateToken(@RequestBody TokenApiRequest tokenRequest) {
+        try {
+            String clientId = tokenRequest.clientId();
+            String clientSecret = tokenRequest.clientSecret();
+            String grantType = tokenRequest.grantType();
+
+            logger.info("Token request received for client_id: {}", clientId);
+
+            if (!"client_credentials".equalsIgnoreCase(grantType)) {
+                return ResponseEntity.badRequest()
+                        .body(new ErrorResponse("Unsupported grant_type. Only 'client_credentials' is allowed.", null));
+            }
+
+            // Validate client
+            ApiClient apiClient = apiClientService.findByClientId(clientId);
+            if (apiClient == null || !apiClient.isActive()) {
+                logger.warn("Invalid or inactive client_id: {}", clientId);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new ErrorResponse("Invalid client credentials", null));
+            }
+
+            // Validate client_secret
+            if (!apiClient.getClientSecret().equals(clientSecret)) {
+                logger.warn("Invalid client_secret for client_id: {}", clientId);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new ErrorResponse("Invalid client credentials", null));
+            }
+
+            // Load user associated with the client
+            User authUser = apiClient.getUser();
+            if (authUser == null || !authUser.isEnabled()) {
+                logger.warn("User not found or disabled for client_id: {}", clientId);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new ErrorResponse("User not found or disabled", null));
+            }
+
+            // Build authentication principal for token generation
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(authUser.getUsername(), authUser.getPassword())
+            );
+
+            // Generate JWT
+            TokenApiResponse tokenApiResponse = jwtService.generateJwtToken(authentication);
+
+            return ResponseEntity.ok(tokenApiResponse);
+
+        } catch (Exception e) {
+            logger.error("Error generating token", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Token generation failed", null));
+        }
+    }
+
+
     // Helper Methods
 
     /**
@@ -240,6 +306,7 @@ public class UserRegistrationController {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
+        user.setRoles(request.getRoles());
         user.setEnabled(true);
         user.setAccountNonExpired(true);
         user.setAccountNonLocked(true);
@@ -256,8 +323,8 @@ public class UserRegistrationController {
     private ApiClient createApiClient(User user) {
         ApiClient apiClient = new ApiClient();
         apiClient.setUser(user);
-        apiClient.setClientId(credentialsGenerator.generateClientId());
-        apiClient.setClientSecret(credentialsGenerator.generateClientSecret());
+        apiClient.setClientId(ClientCredentialsGenerator.generateClientId());
+        apiClient.setClientSecret(ClientCredentialsGenerator.generateClientSecret());
         apiClient.setClientName(user.getUsername() + "_api_client");
         apiClient.setActive(true);
         apiClient.setCreatedAt(LocalDateTime.now());
