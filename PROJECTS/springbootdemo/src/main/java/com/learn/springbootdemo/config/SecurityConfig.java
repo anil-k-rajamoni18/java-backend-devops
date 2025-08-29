@@ -35,12 +35,22 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/h2-console/**").permitAll()   // allow H2 console
-                        .anyRequest().authenticated()                   // secure everything else
+                        // H2 console
+                        .requestMatchers("/h2-console/**").permitAll()
+                        // Swagger / OpenAPI (springdoc)
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html",
+                                "/swagger-ui/**"
+                        ).permitAll()
+                        // (optional) static assets if you have any
+                        .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
+                        .anyRequest().authenticated()
                 )
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**")) // disable CSRF for H2
-                .headers(headers -> headers.frameOptions(frame -> frame.disable())) // allow frames (H2 console is inside an iframe)
-                .formLogin(form -> form.permitAll());  // use basic form login for other endpoints
+                // H2 console needs these
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**"))
+                .headers(headers -> headers.frameOptions(frame -> frame.disable()))
+                .formLogin(form -> form.permitAll());
 
         return http.build();
     }
@@ -54,4 +64,3 @@ public class SecurityConfig {
         return registrationBean;
     }
 }
-
