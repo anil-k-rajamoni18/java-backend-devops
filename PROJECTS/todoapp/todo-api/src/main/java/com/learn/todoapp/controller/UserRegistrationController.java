@@ -13,18 +13,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.nio.file.attribute.UserPrincipal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.Collections;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -147,6 +147,7 @@ public class UserRegistrationController {
                     user.getUsername(), savedApiClient.getClientId());
 
             ClientCredentialsResponse response = new ClientCredentialsResponse(
+                    savedApiClient.getClientName(),
                     savedApiClient.getClientId(),
                     savedApiClient.getClientSecret(),
                     savedApiClient.getCreatedAt(),
@@ -190,6 +191,7 @@ public class UserRegistrationController {
 
             // Don't return the actual secret, just masked version
             ClientCredentialsResponse response = new ClientCredentialsResponse(
+                    apiClient.getClientName(),
                     apiClient.getClientId(),
                     maskSecret(apiClient.getClientSecret()),
                     apiClient.getCreatedAt(),
@@ -239,7 +241,7 @@ public class UserRegistrationController {
     /**
      * Issue JWT token based on client credentials.
      */
-    @PostMapping("/token")
+    @PostMapping(value = "/token", consumes = { MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_FORM_URLENCODED_VALUE }, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> generateToken(@RequestBody TokenApiRequest tokenRequest) {
         try {
             String clientId = tokenRequest.clientId();
@@ -275,11 +277,8 @@ public class UserRegistrationController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(new ErrorResponse("User not found or disabled", null));
             }
-
             // Build authentication principal for token generation
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(authUser.getUsername(), authUser.getPassword())
-            );
+            Authentication authentication = new UsernamePasswordAuthenticationToken(authUser, authUser.getPassword());
 
             // Generate JWT
             TokenApiResponse tokenApiResponse = jwtService.generateJwtToken(authentication);
@@ -344,9 +343,11 @@ public class UserRegistrationController {
         response.setFirstName(user.getFirstName());
         response.setLastName(user.getLastName());
         response.setCreatedAt(user.getCreatedAt());
+        response.setRoles(user.getRoles());
 
         // Include client credentials
         ClientCredentialsResponse credentials = new ClientCredentialsResponse(
+                apiClient.getClientName(),
                 apiClient.getClientId(),
                 apiClient.getClientSecret(),
                 apiClient.getCreatedAt(),

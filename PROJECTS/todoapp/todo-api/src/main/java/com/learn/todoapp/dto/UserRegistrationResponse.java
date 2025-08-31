@@ -12,5 +12,6 @@ public class UserRegistrationResponse {
     private String firstName;
     private String lastName;
     private LocalDateTime createdAt;
+    private String roles;
     private ClientCredentialsResponse clientCredentials;
 }

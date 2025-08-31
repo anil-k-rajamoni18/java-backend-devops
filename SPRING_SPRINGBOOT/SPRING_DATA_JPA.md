@@ -299,7 +299,7 @@ spring.jpa.properties.hibernate.cache.use_query_cache=true
 --- 
 ### 🚀 Core Concepts
 `1. Setup & Dependencies`
-- Add dependency in pom.xml:
+- Add dependency in build.gradle:
 ```gradle
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'

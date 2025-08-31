@@ -46,8 +46,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/swagger-ui/",
             "/v3/api-docs",
             "/actuator/health",
-            "/h2-console/",
-            "/"
+            "/h2-console/"
     );
 
     @Autowired
@@ -73,12 +72,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         logger.debug("Processing authentication for request: {}", request.getRequestURI());
 
         try {
-            // Extract JWT token from request
-            String jwt = parseJwt(request);
+
+            String jwt = parseJwt(request); // Extract JWT token from request
+            String username = jwtService.extractUsername(jwt);
+            logger.debug("Authenticating user: {}", username);
 
             // Validate token and set authentication if valid
-            if (jwt != null && jwtService.validateJwtToken(jwt)) {
-                setAuthenticationFromToken(jwt, request);
+            if (jwt != null && username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                setAuthenticationFromToken(jwt, request, username);
             } else if (jwt != null) {
                 logger.warn("Invalid JWT token received for request: {}", request.getRequestURI());
                 // Optionally, you can set error response here
@@ -136,34 +137,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      * @param jwt Valid JWT token
      * @param request HTTP request for additional details
      */
-    private void setAuthenticationFromToken(String jwt, HttpServletRequest request) {
+    private void setAuthenticationFromToken(String jwt, HttpServletRequest request, String username) {
         try {
-            // Extract username from token
-            String username = jwtService.getUserNameFromJwtToken(jwt);
-            logger.debug("Authenticating user: {}", username);
-
             // Load user details
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            if (jwtService.validateJwtToken(jwt, userDetails)) {
+                // Create authentication token
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
 
-            // Create authentication token
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities()
-                    );
+                // Set additional details from request
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-            // Set additional details from request
-            authentication.setDetails(
-                    new WebAuthenticationDetailsSource().buildDetails(request)
-            );
+                // Set authentication in security context
+                SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            // Set authentication in security context
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-
-            logger.debug("Successfully authenticated user: {} with authorities: {}",
-                    username, userDetails.getAuthorities());
-
+                logger.debug("Successfully authenticated user: {} with authorities: {}",
+                        username, userDetails.getAuthorities());
+            }
         } catch (Exception e) {
             logger.error("Failed to set authentication from token: {}", e.getMessage());
             throw e; // Re-throw to be handled by calling method
@@ -179,8 +174,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        // allow root "/"
-        if ("/".equals(path)) {
+        if ("/".equals(path)) { // allow root "/"
             return true;
         }
         // Skip filtering for excluded paths
@@ -192,41 +186,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         return shouldExclude;
-    }
-
-    /**
-     * Utility method to check if the current request has a valid JWT token.
-     * Can be used by other components to verify authentication state.
-     *
-     * @param request HTTP request
-     * @return true if request has valid JWT token, false otherwise
-     */
-    public boolean hasValidToken(HttpServletRequest request) {
-        try {
-            String jwt = parseJwt(request);
-            return jwt != null && jwtService.validateJwtToken(jwt);
-        } catch (Exception e) {
-            logger.debug("Token validation failed: {}", e.getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * Extracts the username from JWT token in the request without validating it.
-     * Useful for logging and debugging purposes.
-     *
-     * @param request HTTP request
-     * @return username from token or null if not found
-     */
-    public String getUsernameFromRequest(HttpServletRequest request) {
-        try {
-            String jwt = parseJwt(request);
-            if (jwt != null) {
-                return jwtService.getUserNameFromJwtToken(jwt);
-            }
-        } catch (Exception e) {
-            logger.debug("Failed to extract username from request: {}", e.getMessage());
-        }
-        return null;
     }
 }
