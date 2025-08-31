@@ -1,47 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configuration>
+<configuration scan="true">
+    <!-- Optional: prints Logback config errors/warnings to console -->
+    <statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener"/>
 
-    <property name="LOGS" value="./logs" />
+    <!-- App name comes from Spring; fallback if missing -->
+    <springProperty scope="context" name="appName" source="spring.application.name" defaultValue="spring-boot-logger"/>
+    <property name="LOGS" value="./logs"/>
 
-    <appender name="Console"
-              class="ch.qos.logback.core.ConsoleAppender">
-        <layout class="ch.qos.logback.classic.PatternLayout">
-            <Pattern>
-                %black(%d{ISO8601}) %highlight(%-5level) [%blue(%t)] %yellow(%C{1}): %msg%n%throwable
-            </Pattern>
-        </layout>
+    <!-- ===== Console: pretty human-readable ===== -->
+    <!-- in logback-spring.xml -->
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>
+                %black(%d{ISO8601}) %highlight(%-5level) [%blue(%t)]
+                %yellow(%C{1}) [trace=%X{traceId} span=%X{spanId}] : %msg%n%throwable
+            </pattern>
+        </encoder>
     </appender>
 
-    <appender name="RollingFile"
-              class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOGS}/spring-boot-logger.log</file>
-        <encoder
-                class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <Pattern>%d %p %C{1} [%t] %m%n</Pattern>
+
+    <!-- ===== JSON file: write straight to logs/<appName>-yyyy-MM-dd.log ===== -->
+    <appender name="JsonFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- IMPORTANT: no <file> tag, so today's file is the dated one -->
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp/>
+                <logLevel/><logLevelValue/>
+                <loggerName/><threadName/>
+                <message/>
+                <pattern><pattern>{"app":"${appName}"}</pattern></pattern>
+                <mdc/>
+                <stackTrace/>
+            </providers>
         </encoder>
 
-        <rollingPolicy
-                class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <!-- rollover daily and when the file reaches 10 MegaBytes -->
-            <fileNamePattern>${LOGS}/archived/spring-boot-logger-%d{yyyy-MM-dd}.%i.log
-            </fileNamePattern>
-            <timeBasedFileNamingAndTriggeringPolicy
-                    class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>10MB</maxFileSize>
-            </timeBasedFileNamingAndTriggeringPolicy>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOGS}/${appName}-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <cleanHistoryOnStart>true</cleanHistoryOnStart>
         </rollingPolicy>
     </appender>
 
-    <!-- LOG everything at INFO level -->
-    <root level="info">
-        <appender-ref ref="RollingFile" />
-        <appender-ref ref="Console" />
+    <root level="INFO">
+        <appender-ref ref="Console"/>
+        <appender-ref ref="JsonFile"/>
     </root>
-
-    <!-- LOG "com.learn.springbootdemo*" at TRACE level -->
-    <logger name="com.learn.springbootdemo" level="trace" additivity="false">
-        <appender-ref ref="RollingFile" />
-        <appender-ref ref="Console" />
-    </logger>
-
 </configuration>
+
+
+        <!--        // https://www.baeldung.com/spring-boot-logging-->
+<!--//https://www.baeldung.com/mdc-in-log4j-2-logback-->

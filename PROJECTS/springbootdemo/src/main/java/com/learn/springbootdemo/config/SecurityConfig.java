@@ -1,5 +1,7 @@
 package com.learn.springbootdemo.config;
 
+import com.learn.springbootdemo.filter.BlockFilter;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -12,6 +14,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+
+import java.util.List;
 
 @Configuration
 public class SecurityConfig {
@@ -34,15 +38,31 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST,  "/api/**", "/h2-console/**").permitAll()   // allow H2 console
-                        .anyRequest().authenticated()                   // secure everything else
+                        // H2 console
+                        .requestMatchers("/h2-console/**").permitAll()
+                        // Swagger / OpenAPI (springdoc)
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html",
+                                "/swagger-ui/**"
+                        ).permitAll()
+                        // (optional) static assets if you have any
+                        .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
+                        .anyRequest().authenticated()
                 )
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**", "/h2-console/**")) // disable CSRF for H2
-                .headers(headers -> headers.frameOptions(frame -> frame.disable())) // allow frames (H2 console is inside an iframe)
-                .formLogin(AbstractAuthenticationFilterConfigurer::permitAll) // use basic form login for other endpoints
-                .httpBasic(Customizer.withDefaults()); // Basic Auth
-
+                // H2 console needs these
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**"))
+                .headers(headers -> headers.frameOptions(frame -> frame.disable()))
+                .formLogin(form -> form.permitAll());
         return http.build();
     }
-}
 
+    @Bean
+    public FilterRegistrationBean<BlockFilter> filterFilterRegistrationBean() {
+        FilterRegistrationBean<BlockFilter> registrationBean = new FilterRegistrationBean<>();
+        registrationBean.setFilter(new BlockFilter());
+        registrationBean.setUrlPatterns(List.of("/*"));
+        registrationBean.setOrder(1);
+        return registrationBean;
+    }
+}

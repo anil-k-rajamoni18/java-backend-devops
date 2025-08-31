@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
+import org.slf4j.MDC;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.validation.FieldError;
@@ -55,4 +57,22 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         errorMap.put("timestamp", LocalDateTime.now().toString());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMap);
     }
+  
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleAny(Exception ex, HttpServletRequest req) {
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+
+        Map<String, Object> body = Map.of(
+                "timestamp", OffsetDateTime.now().toString(),
+                "status", status.value(),
+                "error", status.getReasonPhrase(),
+                "message", ex.getMessage(),
+                "path", req.getRequestURI(),
+                "traceId", MDC.get("traceId"),
+                "spanId", MDC.get("spanId")
+        );
+        return ResponseEntity.status(status).body(body);
+    }
 }
+  
+
