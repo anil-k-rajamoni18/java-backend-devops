@@ -34,8 +34,14 @@ public class APIMetricsFilter extends OncePerRequestFilter {
         if (isAllowed(uri)) {
             filterChain.doFilter(request, response); // delegate request to DispatcherServlet
             long latency = System.currentTimeMillis() - startTime;
-            log.info("API Metrics: HTTPMethod={}, URI={}, HTTPStatus={}, RemoteHost={}, LATENCY={}ms",
-                    method, uri, response.getStatus(), request.getRemoteHost(), latency);
+            log.info("📊 API Metric - Method: {}, URI: {}, Status: {}, ClientIP: {}, Host: {}, Latency: {} ms",
+                    request.getMethod(),
+                    request.getRequestURI(),
+                    response.getStatus(),
+                    request.getRemoteAddr(),
+                    request.getRemoteHost(),
+                    latency
+            );
         } else {
             log.warn("Blocked request to URI: {}", uri);
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Data
 public class ErrorResponse {
@@ -16,6 +17,7 @@ public class ErrorResponse {
     private String message;
     private String path;
     private List<String> validationErrors;
+    private Map<String, String> errorMap;
 
     public ErrorResponse() {
         this.timestamp = LocalDateTime.now();
@@ -27,6 +29,11 @@ public class ErrorResponse {
         this.error = error;
         this.message = message;
         this.path = path;
+    }
+
+    public ErrorResponse(String message, Map<String, String> errors) {
+        this.message = message;
+        this.errorMap = errors;
     }
 
 }

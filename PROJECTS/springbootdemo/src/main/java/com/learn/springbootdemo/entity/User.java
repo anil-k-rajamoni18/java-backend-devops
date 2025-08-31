@@ -3,12 +3,13 @@ package com.learn.springbootdemo.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 @Entity
 @Data
 @NoArgsConstructor
 @Table(name = "users")
-public class User {
+public class User implements OncePerRequestFilter {
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     private Long id;
@@ -17,6 +18,8 @@ public class User {
     private String email;
     private String password; // Should NOT be exposed in API
     private Boolean active;
+    @Column(name= "address")
+    private String currentAddress;
 
     public User(String name, String email, boolean active) {
         this.name = name;

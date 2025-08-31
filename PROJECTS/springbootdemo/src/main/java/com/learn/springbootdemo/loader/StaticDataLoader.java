@@ -1,6 +1,7 @@
 package com.learn.springbootdemo.loader;
 
-import com.learn.springbootdemo.entity.User;
+import com.learn.springbootdemo.entity.*;
+import com.learn.springbootdemo.repository.*;
 import com.learn.springbootdemo.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,10 +19,57 @@ public class StaticDataLoader implements CommandLineRunner {
     private UserRepository repository;
 
     @Autowired
+    private DepartmentRepository departmentRepository;
+
+    @Autowired
+    private StudentRepository studentRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) throws Exception {
+        loadUserRepositoryData();
+        loadDeptRepositoryData();
+        loadStudentRepositoryData();
+    }
+
+    private void loadStudentRepositoryData() {
+        Student student1 = new Student();
+        student1.setName("ram");
+
+        Student student2 = new Student();
+        student2.setName("krishna");
+
+        Course course1 = new Course();
+        course1.setTitle("Java");
+
+        Course course2 = new Course();
+        course2.setTitle("GenAI");
+
+
+        student1.setCourses(List.of(course1, course2));
+        student2.setCourses(List.of(course2));
+
+        studentRepository.saveAll(List.of(student1, student2));
+
+        log.info("loaded student repository data");
+    }
+
+    private void loadDeptRepositoryData() {
+        Department department = new Department();
+        department.setName("Science");
+
+        List<Employee> employees = List.of(
+                new Employee("ram", department),
+                new Employee("krishna", department));
+
+        department.setEmployees(employees);
+        departmentRepository.save(department);
+        log.info("loaded department repository data");
+    }
+
+    private void loadUserRepositoryData() {
         List<User> users = List.of(
                 new User("Aarav Sharma", "aarav.sharma@example.com", true),
                 new User("Isha Verma", "isha.verma@example.com", true),
