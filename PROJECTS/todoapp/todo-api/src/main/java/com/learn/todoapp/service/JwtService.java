@@ -28,25 +28,25 @@ public class JwtService {
     @Value("${auth.jwt.jwtExpiration}")
     private int jwtExpiration;
 
-    private static SecretKey strongStaticKey;
+    private final static SecretKey strongDynamicKey;
 
-    static {
-        strongStaticKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
+    static { // for strong secret
+        strongDynamicKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
     }
 
     public TokenApiResponse generateJwtToken(Authentication authentication) {
-        Map<String, Object> claims = new HashMap<>();
+        Map<String, String> claims = new HashMap<>();
         final User user = (User) authentication.getPrincipal();
+        claims.put("email", user.getEmail());
+        claims.put("roles", user.getRoles());
 
         final String token = Jwts.builder()
                 .setClaims(claims)
-                .setSubject(user.getEmail())
                 .setSubject(user.getUsername())
-                .setSubject(user.getRoles())
                 .setHeader(Map.of(Header.TYPE, Header.JWT_TYPE))
                 .setIssuedAt(new Date())
                 .setExpiration(new Date((new Date()).getTime() + 1000L * jwtExpiration))
-                .signWith(getSignKeyWhereSecretIsEncoded(), SignatureAlgorithm.HS512)
+                .signWith(getSignKeyWhereSecretIsEncoded(), SignatureAlgorithm.HS384)
                 .compact();
         return TokenApiResponse.builder()
                 .tokenType("Bearer")

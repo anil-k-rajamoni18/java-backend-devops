@@ -3,13 +3,12 @@ package com.learn.springbootdemo.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.web.filter.OncePerRequestFilter;
 
 @Entity
 @Data
 @NoArgsConstructor
 @Table(name = "users")
-public class User implements OncePerRequestFilter {
+public class User {
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     private Long id;

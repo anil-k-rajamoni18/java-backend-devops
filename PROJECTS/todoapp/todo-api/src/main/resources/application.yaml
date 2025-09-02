@@ -95,7 +95,7 @@ management:
 # JWT configurations
 auth:
   jwt:
-    jwtSecret: XlRHUjpSfUg/Y31fRUV0O2hnZ1ljcW4uUTxUR1s6eCIibnI4LDFGc2sjUkUoM3lGLXtpTWF8UURhK1RKdTAo
+    jwtSecret: 64743fbe6837c8d4228a13365acca71ab2933bf9bfe180a9d4f45e6efa00fff8
     jwtExpiration: 3600
 # Application Info
 info:
