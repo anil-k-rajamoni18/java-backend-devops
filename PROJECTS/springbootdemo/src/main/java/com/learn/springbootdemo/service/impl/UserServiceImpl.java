@@ -28,27 +28,24 @@ public class UserServiceImpl implements UserService  {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
-
+    /** Centralized lookup so all paths throw the same custom exception. */
+    private User loadUserOrThrow(Long id) {
+        return userRepository.getUserById(id) // <- use ONE repo method everywhere
+                .orElseThrow(() -> new UserNotFoundException(id));
+        // If you prefer findById, switch to:
+        // return userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
+    }
     @Override
     public Page<UserDto> getAllUsers(int page, int size, String sort, Boolean active) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sort));
-
-        Page<User> userPage;
-        if (active != null) {
-            userPage = userRepository.findAllByActive(active, pageable);
-        } else {
-            userPage = userRepository.findAll(pageable);
-        }
-
-        return userPage.map(UserMapper::toDto);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sort).ascending());
+        Page<User> users = userRepository.findAllByActive(active, pageable);
+        return users.map(UserMapper::toDto);
     }
 
 
     @Override
     public UserDto getUserById(Long id) {
-        Optional<User> userOptional = userRepository.getUserById(id);
-        User user = userOptional.orElseThrow(() -> new UserNotFoundException("User Not Found with Id: " + id));
-        return UserMapper.toDto(user);
+        return UserMapper.toDto(loadUserOrThrow(id));
     }
 
     @Override
@@ -69,12 +66,17 @@ public class UserServiceImpl implements UserService  {
 
     @Override
     public UserDto updateUser(Long id, UserDto userDto) {
-        User existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + id));
+        // BEFORE:
+        // User existingUser = userRepository.findById(id)
+        //         .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + id));
+
+        // AFTER: use the same unified lookup everywhere
+        User existingUser = loadUserOrThrow(id);
 
         existingUser.setName(userDto.getName());
         existingUser.setEmail(userDto.getEmail());
-        existingUser.setActive(userDto.getActive());
+        // Boolean in DTO -> boolean on entity (safe for nulls)
+        existingUser.setActive(Boolean.TRUE.equals(userDto.getActive()));
 
         User updatedUser = userRepository.save(existingUser);
         return UserMapper.toDto(updatedUser);
@@ -83,19 +85,18 @@ public class UserServiceImpl implements UserService  {
 
     @Override
     public UserDto updateUserEmail(Long id, String email) {
-        User existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
-
-        existingUser.setEmail(email);
-        User updatedUser = userRepository.save(existingUser);
-        return UserMapper.toDto(updatedUser);
+        User existing = loadUserOrThrow(id);
+        existing.setEmail(email);
+        User updated = userRepository.save(existing);
+        return UserMapper.toDto(updated);
     }
-
 
     @Override
     public void deleteUser(Long id) {
         if (!userRepository.existsById(id)) {
-            throw new RuntimeException("User not found with ID: " + id);
+            // BEFORE: throw new RuntimeException("User not found with ID: " + id);
+            // AFTER:
+            throw new UserNotFoundException(id);
         }
         userRepository.deleteById(id);
     }
