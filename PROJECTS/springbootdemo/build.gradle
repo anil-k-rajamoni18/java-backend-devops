@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.5.4'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'jacoco'
 }
 
 group = 'com.learn'
@@ -46,6 +47,87 @@ bootJar { // flat jar
 	archiveFileName = "springbootdemo.jar"
 }
 
-tasks.named('test') {
+/* ---------- Default test task: show per-test status + summary ---------- */
+test {
 	useJUnitPlatform()
+
+	// Per-test lines like: PASSED, FAILED, SKIPPED
+	testLogging {
+		events "PASSED", "FAILED", "SKIPPED"
+		exceptionFormat "FULL"
+		showExceptions true
+		showCauses true
+		showStackTraces true
+	}
+
+	// Final summary after all tests
+	afterSuite { desc, result ->
+		if (!desc.parent) {
+			println "=========================================================="
+			println "Test result: ${result.resultType}"
+			println "Tests run: ${result.testCount}, Passed: ${result.successfulTestCount}, " +
+					"Failed: ${result.failedTestCount}, Skipped(ignored): ${result.skippedTestCount}"
+			println "=========================================================="
+		}
+	}
+}
+
+/* ---------- Custom task #1: statusTests ---------- */
+tasks.register('statusTests', Test) {
+	group = 'verification'
+	description = 'Run tests and print per-test status + summary'
+	useJUnitPlatform()
+	// make sure it uses the same compiled tests & classpath
+	testClassesDirs = sourceSets.test.output.classesDirs
+	classpath = sourceSets.test.runtimeClasspath
+
+	testLogging {
+		events "PASSED", "FAILED", "SKIPPED"
+		exceptionFormat "FULL"
+	}
+	afterSuite { desc, result ->
+		if (!desc.parent) {
+			println "=========================================================="
+			println "statusTests result: ${result.resultType}"
+			println "Tests run: ${result.testCount}, Passed: ${result.successfulTestCount}, " +
+					"Failed: ${result.failedTestCount}, Skipped(ignored): ${result.skippedTestCount}"
+			println "=========================================================="
+		}
+	}
+}
+
+/* ---------- JaCoCo setup ---------- */
+jacoco {
+	toolVersion = "0.8.12"
+}
+
+/* Generate the HTML/XML coverage report */
+tasks.jacocoTestReport {
+	dependsOn tasks.test
+	reports {
+		html.required = true   // open index.html in a browser
+		xml.required  = true   // for CI integrations
+		csv.required  = false
+	}
+}
+
+/* ---------- Custom task #2: coverageReport ---------- */
+tasks.register('coverageReport') {
+	group = 'verification'
+	description = 'Generate JaCoCo test coverage report'
+	dependsOn tasks.jacocoTestReport
+}
+
+/* (Optional) fail build if coverage below threshold */
+tasks.register('coverageVerify', JacocoCoverageVerification) {
+	dependsOn tasks.test
+	violationRules {
+		rule {
+			limit {
+				counter = 'INSTRUCTION'    // or LINE, BRANCH, etc.
+				value   = 'COVERED_RATIO'
+				minimum = 0.65             // set your desired minimum
+			}
+		}
+	}
 }

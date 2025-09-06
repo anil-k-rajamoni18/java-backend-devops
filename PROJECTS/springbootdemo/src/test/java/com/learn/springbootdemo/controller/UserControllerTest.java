@@ -11,32 +11,52 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+
 import static org.hamcrest.Matchers.is;
-import static org.mockito.ArgumentMatchers.*;
+import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-
 @WebMvcTest(UserController.class)
+@WithMockUser(username = "tester", roles = {"USER"}) // <-- satisfies default security
 class UserControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @MockitoBean // mock service layer
+    // Spring Boot 3.x override-style Mockito injection (matches your imports)
+    @MockitoBean
     private UserService userService;
 
     @Test
-    @DisplayName("GET /api/users should return paginated users")
-    void testGetAllUsers() throws Exception {
-        Page<UserDto> page = new PageImpl<>(
-                List.of(new UserDto("ram", "ram@example.com", true))
+    @DisplayName("GET /api/users/{id} returns user")
+    void getUserById_ok() throws Exception {
+        Mockito.when(userService.getUserById(1L))
+                .thenReturn(new UserDto("Deva", "deva@example.com", true));
+
+        mockMvc.perform(get("/api/users/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name", is("Deva")));
+    }
+
+    @Test
+    @DisplayName("GET /api/users returns paged users")
+    void getAllUsers_ok() throws Exception {
+        List<UserDto> content = List.of(
+                new UserDto("Alice", "alice@example.com", true),
+                new UserDto("Bob", "bob@example.com", false)
         );
-        Mockito.when(userService.getAllUsers(anyInt(), anyInt(), anyString(), anyBoolean()))
+        Page<UserDto> page = new PageImpl<>(content);
+
+        Mockito.when(userService.getAllUsers(0, 10, "id", true))
                 .thenReturn(page);
 
         mockMvc.perform(get("/api/users")
@@ -45,86 +65,87 @@ class UserControllerTest {
                         .param("sort", "id")
                         .param("active", "true"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].name", is("ram")));
+                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.content[0].name", is("Alice")));
     }
 
     @Test
-    @DisplayName("GET /api/users/{id} should return user by ID")
-    void testGetUserById() throws Exception {
-        UserDto user = new UserDto("kumar", "kumar@example.com", true);
-        Mockito.when(userService.getUserById(1L)).thenReturn(user);
+    @DisplayName("GET /api/users/search returns list")
+    void searchUsers_ok() throws Exception {
+        Mockito.when(userService.searchUsersByName("sa"))
+                .thenReturn(List.of(
+                        new UserDto("Saketh", "s@example.com", true),
+                        new UserDto("Sandy", "sandy@example.com", true)
+                ));
 
-        mockMvc.perform(get("/api/users/1"))
+        mockMvc.perform(get("/api/users/search")
+                        .param("name", "sa"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.email", is("kumar@example.com")));
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].name", is("Saketh")));
     }
 
     @Test
-    @DisplayName("GET /api/users/search should return list of users by name")
-    void testSearchUsers() throws Exception {
-        List<UserDto> users = List.of(
-                new UserDto("Charlie", "charlie@example.com", true)
-        );
-        Mockito.when(userService.searchUsersByName("char"))
-                .thenReturn(users);
-
-        mockMvc.perform(get("/api/users/search").param("name", "char"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name", is("Charlie")));
-    }
-
-    @Test
-    @DisplayName("POST /api/users should create a new user")
-    void testCreateUser() throws Exception {
-        UserDto request = new UserDto("Deva", "Deva@example.com", true);
+    @DisplayName("POST /api/users creates user")
+    void createUser_ok() throws Exception {
         Mockito.when(userService.createUser(any(UserDto.class)))
-                .thenReturn(request);
+                .thenReturn(new UserDto("Bob", "bob@example.com", true));
 
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Deva\",\"email\":\"Deva@example.com\",\"active\":true}"))
+                        .content("""
+                    {"name":"Bob","email":"bob@example.com","active":true}
+                """)
+                        .with(csrf())) // <-- required for POST with default CSRF
+                // If your controller uses @ResponseStatus(HttpStatus.CREATED), use isCreated():
+                // .andExpect(status().isCreated())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name", is("Deva")));
+                .andExpect(jsonPath("$.name", is("Bob")));
     }
 
     @Test
-    @DisplayName("PUT /api/users/{id} should update user")
-    void testUpdateUser() throws Exception {
-        UserDto updated = new UserDto("Eve", "eve@example.com", false);
+    @DisplayName("PUT /api/users/{id} updates user")
+    void updateUser_ok() throws Exception {
         Mockito.when(userService.updateUser(eq(1L), any(UserDto.class)))
-                .thenReturn(updated);
+                .thenReturn(new UserDto("Eve", "eve@example.com", false));
 
         mockMvc.perform(put("/api/users/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Eve\",\"email\":\"eve@example.com\",\"active\":false}"))
+                        .content("""
+                    {"name":"Eve","email":"eve@example.com","active":false}
+                """)
+                        .with(csrf())) // <-- required for PUT
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.active", is(false)));
     }
 
     @Test
-    @DisplayName("PATCH /api/users/{id} should update user email")
-    void testUpdateUserEmail() throws Exception {
-        UserDto updated = new UserDto("Frank", "frank.new@example.com", true);
+    @DisplayName("PATCH /api/users/{id} updates email")
+    void updateUserEmail_ok() throws Exception {
         Mockito.when(userService.updateUserEmail(1L, "frank.new@example.com"))
-                .thenReturn(updated);
+                .thenReturn(new UserDto("Frank", "frank.new@example.com", true));
 
         mockMvc.perform(patch("/api/users/1")
-                        .param("email", "frank.new@example.com"))
+                        .param("email", "frank.new@example.com")
+                        .with(csrf())) // <-- required for PATCH
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email", is("frank.new@example.com")));
     }
 
     @Test
-    @DisplayName("DELETE /api/users/{id} should delete user")
-    void testDeleteUser() throws Exception {
-        mockMvc.perform(delete("/api/users/1"))
+    @DisplayName("DELETE /api/users/{id} deletes user")
+    void deleteUser_ok() throws Exception {
+        mockMvc.perform(delete("/api/users/1")
+                        .with(csrf())) // <-- required for DELETE
+                // if you return 204, change to isNoContent()
                 .andExpect(status().isOk());
+
         Mockito.verify(userService).deleteUser(1L);
     }
 
     @Test
-    @DisplayName("GET /api/users/{id} should return 404 when user not found")
-    void testUserNotFound() throws Exception {
+    @DisplayName("GET /api/users/{id} returns 404 when not found")
+    void userNotFound_404() throws Exception {
         Mockito.when(userService.getUserById(99L))
                 .thenThrow(new UserNotFoundException("User not found"));
 
