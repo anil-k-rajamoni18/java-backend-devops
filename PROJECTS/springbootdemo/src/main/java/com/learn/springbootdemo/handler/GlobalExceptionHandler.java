@@ -1,5 +1,6 @@
 package com.learn.springbootdemo.handler;
 
+import com.learn.springbootdemo.dto.ApiError;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -72,6 +73,20 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 "spanId", MDC.get("spanId")
         );
         return ResponseEntity.status(status).body(body);
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    @ResponseBody
+    public ResponseEntity<ApiError> handleUserNotFound(UserNotFoundException ex) {
+        ApiError error = new ApiError("USER_NOT_FOUND", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(Exception.class)
+    @ResponseBody
+    public ResponseEntity<ApiError> handleGeneric(Exception ex) {
+        ApiError error = new ApiError("GENERIC_ERROR", "Something went wrong");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 }
   

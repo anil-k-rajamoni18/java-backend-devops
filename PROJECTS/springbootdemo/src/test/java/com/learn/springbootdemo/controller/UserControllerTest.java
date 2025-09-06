@@ -26,13 +26,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(UserController.class)
-@WithMockUser(username = "tester", roles = {"USER"}) // <-- satisfies default security
+@WithMockUser(username = "tester", roles = {"USER"})
 class UserControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    // Spring Boot 3.x override-style Mockito injection (matches your imports)
     @MockitoBean
     private UserService userService;
 
@@ -94,12 +93,10 @@ class UserControllerTest {
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                    {"name":"Bob","email":"bob@example.com","active":true}
-                """)
-                        .with(csrf())) // <-- required for POST with default CSRF
-                // If your controller uses @ResponseStatus(HttpStatus.CREATED), use isCreated():
-                // .andExpect(status().isCreated())
-                .andExpect(status().isOk())
+                                   {"name":"Bob","email":"bob@example.com","active":true}
+                                   """)
+                        .with(csrf()))
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name", is("Bob")));
     }
 
@@ -114,7 +111,7 @@ class UserControllerTest {
                         .content("""
                     {"name":"Eve","email":"eve@example.com","active":false}
                 """)
-                        .with(csrf())) // <-- required for PUT
+                        .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.active", is(false)));
     }
@@ -127,7 +124,7 @@ class UserControllerTest {
 
         mockMvc.perform(patch("/api/users/1")
                         .param("email", "frank.new@example.com")
-                        .with(csrf())) // <-- required for PATCH
+                        .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email", is("frank.new@example.com")));
     }
@@ -136,9 +133,8 @@ class UserControllerTest {
     @DisplayName("DELETE /api/users/{id} deletes user")
     void deleteUser_ok() throws Exception {
         mockMvc.perform(delete("/api/users/1")
-                        .with(csrf())) // <-- required for DELETE
-                // if you return 204, change to isNoContent()
-                .andExpect(status().isOk());
+                        .with(csrf()))
+                .andExpect(status().isNoContent());
 
         Mockito.verify(userService).deleteUser(1L);
     }

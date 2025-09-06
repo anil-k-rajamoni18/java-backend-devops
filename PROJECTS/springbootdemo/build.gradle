@@ -15,6 +15,11 @@ java {
 	}
 }
 
+jacoco {
+	toolVersion = "0.8.13"
+	reportsDirectory = layout.buildDirectory.dir('reports/jacoco')
+}
+
 configurations {
 	compileOnly {
 		extendsFrom annotationProcessor
@@ -50,6 +55,7 @@ bootJar { // flat jar
 /* ---------- Default test task: show per-test status + summary ---------- */
 test {
 	useJUnitPlatform()
+	finalizedBy(tasks.jacocoTestReport)
 
 	// Per-test lines like: PASSED, FAILED, SKIPPED
 	testLogging {
@@ -62,56 +68,29 @@ test {
 
 	// Final summary after all tests
 	afterSuite { desc, result ->
-		if (!desc.parent) {
-			println "=========================================================="
-			println "Test result: ${result.resultType}"
-			println "Tests run: ${result.testCount}, Passed: ${result.successfulTestCount}, " +
-					"Failed: ${result.failedTestCount}, Skipped(ignored): ${result.skippedTestCount}"
-			println "=========================================================="
+		if (!desc.parent) { // will match the root suite
+			println "\n================= TEST SUMMARY ================="
+			println "Total tests   : ${result.testCount}"
+			println "Passed        : ${result.successfulTestCount}"
+			println "Failed        : ${result.failedTestCount}"
+			println "Skipped       : ${result.skippedTestCount}"
+			println "==============================================="
 		}
 	}
 }
 
-/* ---------- Custom task #1: statusTests ---------- */
-tasks.register('statusTests', Test) {
-	group = 'verification'
-	description = 'Run tests and print per-test status + summary'
-	useJUnitPlatform()
-	// make sure it uses the same compiled tests & classpath
-	testClassesDirs = sourceSets.test.output.classesDirs
-	classpath = sourceSets.test.runtimeClasspath
 
-	testLogging {
-		events "PASSED", "FAILED", "SKIPPED"
-		exceptionFormat "FULL"
-	}
-	afterSuite { desc, result ->
-		if (!desc.parent) {
-			println "=========================================================="
-			println "statusTests result: ${result.resultType}"
-			println "Tests run: ${result.testCount}, Passed: ${result.successfulTestCount}, " +
-					"Failed: ${result.failedTestCount}, Skipped(ignored): ${result.skippedTestCount}"
-			println "=========================================================="
-		}
-	}
-}
-
-/* ---------- JaCoCo setup ---------- */
-jacoco {
-	toolVersion = "0.8.12"
-}
 
 /* Generate the HTML/XML coverage report */
 tasks.jacocoTestReport {
 	dependsOn tasks.test
 	reports {
-		html.required = true   // open index.html in a browser
-		xml.required  = true   // for CI integrations
-		csv.required  = false
+		xml.required = false
+		csv.required = false
+		html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
 	}
 }
 
-/* ---------- Custom task #2: coverageReport ---------- */
 tasks.register('coverageReport') {
 	group = 'verification'
 	description = 'Generate JaCoCo test coverage report'
